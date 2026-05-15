@@ -1,0 +1,16 @@
+[project]
+name = "lampion-mcp"
+version = "0.1.0"
+description = "MCP server for Lampion managed PostgreSQL — lets AI agents manage projects, branches, and databases"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp[cli]>=1.0.0",
+    "httpx>=0.28.0",
+]
+
+[project.scripts]
+lampion-mcp = "lampion_mcp.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
