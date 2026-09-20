@@ -1,16 +1,55 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
 [project]
 name = "lampion-mcp"
 version = "0.1.0"
 description = "MCP server for Lampion managed PostgreSQL — lets AI agents manage projects, branches, and databases"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
+authors = [{ name = "Lampion" }]
+keywords = ["mcp", "model-context-protocol", "postgres", "postgresql", "database", "ai", "agents", "lampion"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Database",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
 dependencies = [
     "mcp[cli]>=1.0.0",
     "httpx>=0.28.0",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+]
+
+[project.urls]
+Homepage = "https://lampion.cloud"
+Documentation = "https://lampion.cloud/agents"
+Source = "https://github.com/Sylv-Lej/lampion-mcp"
+
 [project.scripts]
 lampion-mcp = "lampion_mcp.cli:main"
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[tool.hatch.build.targets.wheel]
+packages = ["lampion_mcp"]
+
+[tool.hatch.build.targets.sdist]
+include = ["lampion_mcp", "tests", "README.md", "LICENSE", "pyproject.toml"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

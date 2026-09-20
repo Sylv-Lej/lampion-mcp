@@ -1,0 +1,78 @@
+name: release
+
+# Publie lampion-mcp sur PyPI via Trusted Publishing (OIDC — aucun token stocké).
+#
+#   git tag v0.1.0 && git push origin v0.1.0
+#
+# Prérequis côté PyPI, une seule fois, sur
+# https://pypi.org/manage/account/publishing/ :
+#   PyPI Project Name : lampion-mcp
+#   Owner             : Sylv-Lej
+#   Repository name   : lampion-mcp
+#   Workflow name     : release.yml
+#   Environment name  : pypi
+# (tant que le projet n'existe pas sur PyPI, c'est un « pending publisher ».)
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Vérifier que le tag correspond à la version du paquet
+        if: github.event_name == 'push'
+        run: |
+          version=$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)
+          tag_version="${GITHUB_REF_NAME#v}"
+          if [ "$version" != "$tag_version" ]; then
+            echo "::error::tag $GITHUB_REF_NAME ≠ version $version de pyproject.toml"
+            exit 1
+          fi
+
+      - name: Tests
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[dev]'
+          python -m pytest tests/ -v
+
+      - name: Build + check
+        run: |
+          python -m pip install --upgrade build twine
+          python -m build
+          python -m twine check dist/*
+
+      - name: Vérifier que le serveur s'installe et démarre
+        run: |
+          python -m venv /tmp/smoke
+          /tmp/smoke/bin/pip install dist/*.whl
+          /tmp/smoke/bin/lampion-mcp --help
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write   # requis pour Trusted Publishing (OIDC)
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

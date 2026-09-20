@@ -5,9 +5,19 @@ Serveur MCP (Model Context Protocol) pour Lampion — permet aux agents IA (Clau
 ## Installation
 
 ```bash
-cd console/mcp
-pip install -e .
+pip install lampion-mcp
 ```
+
+<details>
+<summary>Depuis les sources (développement)</summary>
+
+```bash
+git clone https://github.com/Sylv-Lej/lampion-mcp.git
+cd lampion-mcp
+pip install -e '.[dev]'
+pytest tests/
+```
+</details>
 
 ## Usage
 
