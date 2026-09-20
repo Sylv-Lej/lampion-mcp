@@ -26,7 +26,9 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-    "mcp[cli]>=1.0.0",
+    # server.py utilise l'API v1 (mcp.server.fastmcp.FastMCP), renommée MCPServer
+    # en mcp 2.x : la borne haute est obligatoire tant que la migration n'est pas faite.
+    "mcp[cli]>=1.0.0,<2",
     "httpx>=0.28.0",
 ]
 
