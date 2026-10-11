@@ -33,7 +33,10 @@ lampion-mcp
 
 ## Configuration Claude Desktop
 
-Fichier `~/.claude/claude_desktop_config.json` :
+Fichier `claude_desktop_config.json`, selon le système :
+
+- macOS : `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows : `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
@@ -65,12 +68,12 @@ Fichier `.cursor/mcp.json` ou `.vscode/mcp.json` :
 }
 ```
 
-## Tools disponibles (47)
+## Tools disponibles (51)
 
 ### Projets
 - `list_projects` — Lister les projets
 - `get_project` — Details d'un projet
-- `create_project` — Creer un projet PostgreSQL (choix de region : Scaleway Paris ou OVH Gravelines)
+- `create_project` — Creer un projet PostgreSQL (region `fr-par-1`, Scaleway Paris ; `fr-gra-1`, OVH Gravelines, n'est pas encore ouverte : aucun data plane OVH n'est configure)
 - `delete_project` — Supprimer un projet (admin requis)
 
 ### Branches
@@ -128,6 +131,10 @@ Fichier `.cursor/mcp.json` ou `.vscode/mcp.json` :
 
 ### Compliance
 - `get_residency` — Ou sont les donnees physiquement (datacenter, provider, chiffrement, certifications)
+- `get_security_questionnaire` — Base de connaissances securite de l'organisation (Markdown), pour repondre a un questionnaire fournisseur ; chaque reponse porte un statut yes/partial/no/planned a respecter
+- `list_subprocessors` — Sous-traitants ultérieurs RGPD, marques `in_use` selon les regions des projets
+- `get_dpa_status` — Statut du DPA de l'organisation (version, acceptation, changement de sous-traitants). Lecture seule : l'acceptation engage la societe et reste reservee a l'owner (console, CLI)
+- `get_org_residency` — Rapport de residence de toute l'organisation (projets par region, chiffrement par couche, empreinte SHA-256 identique au PDF)
 
 ## Resources MCP (5)
 

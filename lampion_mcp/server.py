@@ -89,7 +89,7 @@ async def list_branches(ctx: Context, project_id: str) -> str:
 
 @mcp.tool()
 async def create_branch(ctx: Context, project_id: str, name: str, parent_id: str) -> str:
-    """Create a copy-on-write branch from a parent. parent_id is the timeline_id of the parent
+    """Create a copy-on-write branch from a parent. parent_id is the branch id of the parent
     (use the project_id for the main branch)."""
     return _json(await _client(ctx).create_branch(project_id, name, parent_id))
 
@@ -384,8 +384,49 @@ async def set_allowlist(ctx: Context, project_id: str, endpoint_id: str,
 @mcp.tool()
 async def get_residency(ctx: Context, project_id: str) -> str:
     """Get data residency information: where project data physically resides,
-    encryption status, certifications, and compliance details."""
+    encryption status, and compliance details. Host certifications
+    (compliance.provider_certifications, e.g. HDS at Scaleway) are the hosting
+    provider's, not Lampion's own (compliance.lampion_certifications)."""
     return _json(await _client(ctx).get_residency(project_id))
+
+
+# ── Compliance ──────────────────────────────────────────────────────────────
+
+@mcp.tool()
+async def get_security_questionnaire(ctx: Context, locale: str = "en") -> str:
+    """Get Lampion's security & compliance knowledge base for the current organization
+    (hosting, subprocessors, encryption, access control, backups, certifications…), as
+    Markdown, to answer a vendor security questionnaire. Each entry has a status
+    (yes | partial | no | planned): never answer "yes" for a partial, no or planned entry,
+    and do not present the hosting provider's certifications as Lampion's.
+    locale: "fr" or "en"."""
+    return await _client(ctx).get_security_questionnaire(locale)
+
+
+@mcp.tool()
+async def list_subprocessors(ctx: Context, locale: str = "en") -> str:
+    """List Lampion's GDPR subprocessors, each flagged in_use for the current organization
+    (depending on the regions its projects use). locale: "fr" or "en"."""
+    return _json(await _client(ctx).list_subprocessors(locale))
+
+
+@mcp.tool()
+async def get_dpa_status(ctx: Context) -> str:
+    """Status of the organization's DPA (GDPR Article 28 data processing agreement): current
+    version and URL, whether it is accepted, by whom and when, and whether subprocessors changed
+    since. Read-only on purpose: accepting the DPA commits the company and must be done by its
+    owner in the console or CLI, never by an assistant."""
+    return _json(await _client(ctx).get_dpa_status())
+
+
+@mcp.tool()
+async def get_org_residency(ctx: Context, locale: str = "en") -> str:
+    """Data residency report of the whole organization: projects grouped by region, hosting
+    provider and datacenter, encryption per data layer, subprocessors in use, and a SHA-256
+    digest of the content (the same one printed on the PDF export). Encryption values are the
+    ones actually in place — do not upgrade them (e.g. to "AES-256") when quoting.
+    locale: "fr" or "en"."""
+    return _json(await _client(ctx).get_org_residency(locale))
 
 
 # ── Permissions (GRANT/REVOKE) ──────────────────────────────────────────────

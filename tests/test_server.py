@@ -35,11 +35,12 @@ def test_tools_registered():
         "list_masking_functions", "list_masking_rules", "add_masking_rule", "delete_masking_rule",
         "get_allowlist", "set_allowlist",
         "get_residency",
+        "get_security_questionnaire", "list_subprocessors", "get_org_residency", "get_dpa_status",
         "list_permissions", "grant_permission", "revoke_permission",
     }
     missing = expected - tool_names
     assert not missing, f"Missing tools: {missing}"
-    assert len(tool_names) >= 47
+    assert len(tool_names) >= 51
 
 
 def test_resources_registered():
@@ -82,4 +83,4 @@ def test_configure():
 def test_tool_count():
     """Le nombre de tools doit correspondre à ce qu'on annonce."""
     count = len(mcp._tool_manager._tools)
-    assert count == 47, f"Expected 47 tools, got {count}"
+    assert count == 51, f"Expected 51 tools, got {count}"

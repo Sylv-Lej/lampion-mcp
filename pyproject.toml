@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lampion-mcp"
-version = "0.1.0"
+version = "0.2.0"
 description = "MCP server for Lampion managed PostgreSQL — lets AI agents manage projects, branches, and databases"
 readme = "README.md"
 license = "MIT"

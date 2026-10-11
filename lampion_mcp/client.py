@@ -221,6 +221,20 @@ class LampionClient:
     async def get_residency(self, project_id: str) -> dict:
         return await self._get(f"/v1/projects/{project_id}/residency")
 
+    # ── Compliance ──────────────────────────────────────────────────────────
+
+    async def get_security_questionnaire(self, locale: str = "en") -> str:
+        return await self._get_text("/v1/orgs/compliance/questionnaire", locale=locale, format="md")
+
+    async def list_subprocessors(self, locale: str = "en") -> dict:
+        return await self._get("/v1/orgs/compliance/subprocessors", locale=locale)
+
+    async def get_dpa_status(self) -> dict:
+        return await self._get("/v1/orgs/compliance/dpa")
+
+    async def get_org_residency(self, locale: str = "en") -> dict:
+        return await self._get("/v1/orgs/compliance/residency", locale=locale)
+
     # ── Permissions ─────────────────────────────────────────────────────────
 
     async def list_permissions(self, project_id: str, endpoint_id: str,
