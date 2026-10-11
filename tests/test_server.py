@@ -84,3 +84,44 @@ def test_tool_count():
     """Le nombre de tools doit correspondre à ce qu'on annonce."""
     count = len(mcp._tool_manager._tools)
     assert count == 51, f"Expected 51 tools, got {count}"
+
+
+# ── Compliance tools ────────────────────────────────────────────────────────
+
+def _ctx(client) -> MagicMock:
+    """Contexte MCP minimal : les tools lisent le client dans le lifespan context."""
+    ctx = MagicMock()
+    ctx.request_context.lifespan_context.client = client
+    return ctx
+
+
+def test_no_tool_can_accept_the_dpa():
+    """Accepter le DPA engage la société : réservé à l'owner (console, CLI), jamais à un assistant."""
+    names = {t.name for t in mcp._tool_manager._tools.values()}
+    assert not {n for n in names if "dpa" in n and n != "get_dpa_status"}
+
+
+@pytest.mark.asyncio
+async def test_get_security_questionnaire_tool_returns_raw_markdown():
+    from lampion_mcp.server import get_security_questionnaire
+    client = MagicMock()
+    client.get_security_questionnaire = AsyncMock(return_value="# Lampion\n| Q | yes |")
+    result = await get_security_questionnaire(_ctx(client), locale="fr")
+    # Le Markdown est rendu tel quel, pas ré-encodé en chaîne JSON.
+    assert result == "# Lampion\n| Q | yes |"
+    client.get_security_questionnaire.assert_awaited_once_with("fr")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("tool_name, client_method, args", [
+    ("list_subprocessors", "list_subprocessors", ("fr",)),
+    ("get_dpa_status", "get_dpa_status", ()),
+    ("get_org_residency", "get_org_residency", ("fr",)),
+])
+async def test_compliance_tools_return_json(tool_name, client_method, args):
+    import lampion_mcp.server as server
+    client = MagicMock()
+    setattr(client, client_method, AsyncMock(return_value={"ok": True}))
+    result = await getattr(server, tool_name)(_ctx(client), *args)
+    assert json.loads(result) == {"ok": True}
+    getattr(client, client_method).assert_awaited_once_with(*args)

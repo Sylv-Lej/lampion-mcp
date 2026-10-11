@@ -284,6 +284,84 @@ async def test_pg_dump():
     await c.close()
 
 
+# ── Compliance ───────────────────────────────────────────────────────────────
+
+def _capturing_client(status: int, body: dict | str) -> tuple[LampionClient, list[httpx.Request]]:
+    """Client qui enregistre chaque requête, pour vérifier le chemin et la query string."""
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        if isinstance(body, str):
+            return httpx.Response(status, text=body, headers={"content-type": "text/markdown"})
+        return httpx.Response(status, json=body)
+
+    c = LampionClient("http://test", "lmp_live_test123")
+    c._client = httpx.AsyncClient(transport=httpx.MockTransport(handler), base_url="http://test")
+    return c, seen
+
+
+@pytest.mark.asyncio
+async def test_get_security_questionnaire_returns_markdown():
+    c, seen = _capturing_client(200, "# Lampion — security\n\n| Q | Status |")
+    result = await c.get_security_questionnaire("fr")
+    assert isinstance(result, str) and result.startswith("# Lampion")
+    assert seen[0].url.path == "/v1/orgs/compliance/questionnaire"
+    assert dict(seen[0].url.params) == {"locale": "fr", "format": "md"}
+    await c.close()
+
+
+@pytest.mark.asyncio
+async def test_get_security_questionnaire_defaults_to_english():
+    c, seen = _capturing_client(200, "# Lampion")
+    await c.get_security_questionnaire()
+    assert seen[0].url.params["locale"] == "en"
+    await c.close()
+
+
+@pytest.mark.asyncio
+async def test_list_subprocessors():
+    body = {"version": "2026-10-01", "notice_period_days": 30,
+            "subprocessors": [{"name": "Scaleway", "in_use": True}]}
+    c, seen = _capturing_client(200, body)
+    result = await c.list_subprocessors("fr")
+    assert result["subprocessors"][0]["name"] == "Scaleway"
+    assert seen[0].url.path == "/v1/orgs/compliance/subprocessors"
+    assert seen[0].url.params["locale"] == "fr"
+    await c.close()
+
+
+@pytest.mark.asyncio
+async def test_get_dpa_status_is_a_get():
+    body = {"current_version": "1.0", "accepted": False, "needs_reacceptance": False}
+    c, seen = _capturing_client(200, body)
+    result = await c.get_dpa_status()
+    assert result["current_version"] == "1.0"
+    assert seen[0].method == "GET"
+    assert seen[0].url.path == "/v1/orgs/compliance/dpa"
+    await c.close()
+
+
+@pytest.mark.asyncio
+async def test_get_org_residency():
+    body = {"regions": [{"id": "fr-par-1", "projects": 2}], "sha256": "ab" * 32}
+    c, seen = _capturing_client(200, body)
+    result = await c.get_org_residency("fr")
+    assert result["sha256"] == "ab" * 32
+    assert seen[0].url.path == "/v1/orgs/compliance/residency"
+    assert seen[0].url.params["locale"] == "fr"
+    await c.close()
+
+
+@pytest.mark.asyncio
+async def test_compliance_forbidden_raises():
+    c, _ = _capturing_client(403, {"detail": "Forbidden"})
+    with pytest.raises(httpx.HTTPStatusError) as exc:
+        await c.get_dpa_status()
+    assert exc.value.response.status_code == 403
+    await c.close()
+
+
 # ── Auth header ──────────────────────────────────────────────────────────────
 
 @pytest.mark.asyncio
